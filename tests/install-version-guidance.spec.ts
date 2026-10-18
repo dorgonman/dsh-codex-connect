@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest'
 
 const install = await readFile(new URL('../INSTALL.md', import.meta.url), 'utf8')
 const compatibility = JSON.parse(await readFile(new URL('../verified-compatibility.json', import.meta.url), 'utf8'))
-const candidate = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version
+const maintainedVersion = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version
+const candidate = '0.2.0-alpha.5'
 const firstInstall = install.indexOf('dsh plugin --profile web add ')
 const preflight = install.slice(0, firstInstall)
 const shellBlocks = [...install.matchAll(/```sh\s*\n([\s\S]*?)```/gu)]
@@ -24,10 +25,13 @@ describe('installation version guidance', () => {
       !entry.verifiedDshVersions.includes(version))).toBe(true)
   })
 
-  it('records the checked candidate hosts without changing historical published pairings', async () => {
+  it('preserves the upstream candidate host record without claiming the maintained RC2 matrix', async () => {
     const declared = JSON.parse(await readFile(new URL('../compatibility.json', import.meta.url), 'utf8'))
     expect(compatibility.pluginVersions.find((entry: { version: string }) => entry.version === candidate)?.verifiedDshVersions)
-      .toEqual(declared.dshPluginApi.versions)
+      .toEqual(declared.dshPluginApi.versions.filter((version: string) => version !== '0.2.1-rc.2'))
+    expect(maintainedVersion).toBe('0.2.0-alpha.5-kano.1')
+    expect(declared.dshPluginApi.versions).toContain('0.2.1-rc.2')
+    expect(compatibility.pluginVersions.some((entry: { version: string }) => entry.version === maintainedVersion)).toBe(false)
   })
 
   it.each([

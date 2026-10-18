@@ -74,7 +74,7 @@ describe('compatibility contract', () => {
     ]) expect(evaluateCompatibility({ nodeVersion: 'v24.15.0', packageVersions: packages }).status).toBe('unverified')
   })
 
-  it.each(['0.1.7-rc.1', '0.1.7-rc.2', '0.2.0-rc.1', '0.2.0-rc.2', '0.2.1-alpha.1', '0.2.1-alpha.2', '0.2.1-alpha.3', '0.2.1-alpha.4', '0.2.1-alpha.5', '0.2.1-rc.1'])('accepts exact consistent %s and pi-ai 0.85.1', version => {
+  it.each(['0.1.7-rc.1', '0.1.7-rc.2', '0.2.0-rc.1', '0.2.0-rc.2', '0.2.1-alpha.1', '0.2.1-alpha.2', '0.2.1-alpha.3', '0.2.1-alpha.4', '0.2.1-alpha.5', '0.2.1-rc.1', '0.2.1-rc.2'])('accepts exact consistent %s and pi-ai 0.85.1', version => {
     const packages = { ...compatiblePackages, '@deepseek-ai/dsh-llm': version,
       '@deepseek-ai/dsh-llm-pi-ai': version, '@deepseek-ai/dsh-compaction': version }
     expect(evaluateCompatibility({ nodeVersion: 'v24.15.0', packageVersions: packages }).status).toBe('compatible')
@@ -99,7 +99,7 @@ describe('compatibility contract', () => {
   )
 
   it('does not infer later prereleases, stable releases, or a new pi-ai pair from declared support', () => {
-    for (const version of ['0.1.7-rc.3', '0.1.7-alpha.2', '0.2.0-rc.3', '0.2.0', '0.2.1-alpha.6', '0.2.1-rc.2', '0.2.1', '0.2.2-alpha.1']) {
+    for (const version of ['0.1.7-rc.3', '0.1.7-alpha.2', '0.2.0-rc.3', '0.2.0', '0.2.1-alpha.6', '0.2.1-rc.3', '0.2.1', '0.2.2-alpha.1']) {
       const packages = { ...compatiblePackages, '@deepseek-ai/dsh-llm': version,
         '@deepseek-ai/dsh-llm-pi-ai': version, '@deepseek-ai/dsh-compaction': version }
       expect(evaluateCompatibility({ nodeVersion: 'v24.15.0', packageVersions: packages }).status).toBe('unverified')
@@ -119,7 +119,7 @@ describe('compatibility contract', () => {
     },
   )
 
-  it.each(['0.2.1-alpha.5', '0.2.1-rc.1'])('rejects mixed or missing diagnostic peers for %s', version => {
+  it.each(['0.2.1-alpha.5', '0.2.1-rc.1', '0.2.1-rc.2'])('rejects mixed or missing diagnostic peers for %s', version => {
     const names = ['@deepseek-ai/dsh-llm', '@deepseek-ai/dsh-llm-pi-ai', '@deepseek-ai/dsh-compaction'] as const
     const packages = { ...compatiblePackages, ...Object.fromEntries(names.map(name => [name, version])) }
     for (const name of names) {
@@ -128,6 +128,13 @@ describe('compatibility contract', () => {
     }
   })
 
+  it.each(['@deepseek-ai/dsh-llm', '@deepseek-ai/dsh-llm-pi-ai', '@deepseek-ai/dsh-compaction'] as const)(
+    'rejects mixed rc.1/rc.2 metadata for %s', name => {
+      const rc2 = { ...compatiblePackages, '@deepseek-ai/dsh-llm': '0.2.1-rc.2',
+        '@deepseek-ai/dsh-llm-pi-ai': '0.2.1-rc.2', '@deepseek-ai/dsh-compaction': '0.2.1-rc.2' }
+      expect(evaluateCompatibility({ nodeVersion: 'v24.15.0', packageVersions: { ...rc2, [name]: '0.2.1-rc.1' } }).status).toBe('unverified')
+    },
+  )
   it('marks a declared package mismatch unverified rather than incompatible', () => {
     const report = evaluateCompatibility({
       nodeVersion: 'v24.0.0',

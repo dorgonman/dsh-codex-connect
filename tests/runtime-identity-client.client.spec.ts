@@ -9,7 +9,7 @@ const json = (value: unknown, status = 200) => new Response(JSON.stringify(value
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals() })
 
 describe('fresh runtime identity evidence', () => {
-  it.each(['0.2.1-alpha.5', '0.2.1-rc.1'])('accepts coherent %s Host receipts and rejects mixed metadata', async version => {
+  it.each(['0.2.1-alpha.5', '0.2.1-rc.1', '0.2.1-rc.2'])('accepts coherent %s Host receipts and rejects mixed metadata', async version => {
     const report = runtimeReport(CODEX_CONNECT_VERSION)
     report.currentDshVersion = version
     for (const name of ['@deepseek-ai/dsh-llm', '@deepseek-ai/dsh-llm-pi-ai', '@deepseek-ai/dsh-compaction'] as const) {
