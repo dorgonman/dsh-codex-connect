@@ -23,7 +23,7 @@ This guide recommends Codex Connect `0.2.0-alpha.4` / DSH `0.2.1-alpha.3`; the o
 
 `0.2.0-alpha.4` extends exact host support to DSH `0.2.1-alpha.2` and `0.2.1-alpha.3`, retaining the previous five hosts. Existing supported hosts do not require an upgrade; Task remains paused and defaults are unchanged.
 
-**Maintained RC2 package:** `0.2.0-alpha.5-kano.1` adds exact DSH `0.2.1-rc.2` compatibility. See the [maintenance scope and validation boundary](docs/agent-notes/dsh-021-rc2-maintained-compatibility.md). This Git package is separate from upstream npm release recommendations.
+**Maintained RC5 package:** `0.2.0-alpha.5-kano.2` adds exact DSH `0.2.1-rc.5` compatibility and retains the previously declared hosts. See the [maintenance scope and validation boundary](docs/agent-notes/dsh-021-rc5-maintained-compatibility.md). This Git package is separate from upstream npm release recommendations.
 
 **Unreleased source candidate:** this checkout prepares Codex Connect `0.2.0-alpha.5`, adding exact DSH `0.2.1-alpha.5` and `0.2.1-rc.1` declarations while retaining all eight previously declared hosts, including `0.2.1-alpha.4`. Host/browser diagnostics share the same version policy; see the [candidate compatibility note](docs/agent-notes/dsh-021-alpha5-rc1-compatibility.md) and [alpha.4 client-state repair](docs/agent-notes/dsh-021-alpha4-compatibility.md). Candidate verification does not prove npm publication or full user acceptance. The published pairing table and installation commands below still describe the immutable `0.2.0-alpha.4` package until the new release is published.
 

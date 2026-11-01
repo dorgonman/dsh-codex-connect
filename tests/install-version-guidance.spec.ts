@@ -25,12 +25,13 @@ describe('installation version guidance', () => {
       !entry.verifiedDshVersions.includes(version))).toBe(true)
   })
 
-  it('preserves the upstream candidate host record without claiming the maintained RC2 matrix', async () => {
+  it('preserves the upstream candidate host record without claiming the maintained RC2/RC5 matrix', async () => {
     const declared = JSON.parse(await readFile(new URL('../compatibility.json', import.meta.url), 'utf8'))
     expect(compatibility.pluginVersions.find((entry: { version: string }) => entry.version === candidate)?.verifiedDshVersions)
-      .toEqual(declared.dshPluginApi.versions.filter((version: string) => version !== '0.2.1-rc.2'))
-    expect(maintainedVersion).toBe('0.2.0-alpha.5-kano.1')
+      .toEqual(declared.dshPluginApi.versions.filter((version: string) => !['0.2.1-rc.2', '0.2.1-rc.5'].includes(version)))
+    expect(maintainedVersion).toBe('0.2.0-alpha.5-kano.2')
     expect(declared.dshPluginApi.versions).toContain('0.2.1-rc.2')
+    expect(declared.dshPluginApi.versions).toContain('0.2.1-rc.5')
     expect(compatibility.pluginVersions.some((entry: { version: string }) => entry.version === maintainedVersion)).toBe(false)
   })
 

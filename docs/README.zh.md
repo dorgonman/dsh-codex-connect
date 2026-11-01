@@ -25,7 +25,7 @@ Codex Connect 为标准 Harness agent loop 添加 `openai-codex` 模型提供方
 
 `0.2.0-alpha.4` 将精确宿主支持扩展到 DSH `0.2.1-alpha.2` 和 `0.2.1-alpha.3`，保留原有五个宿主。原有受支持宿主无需升级；Task 仍暂停，默认设置不变。
 
-**Maintained RC2 package:** `0.2.0-alpha.5-kano.1` adds exact DSH `0.2.1-rc.2` compatibility. See the [maintenance scope and validation boundary](agent-notes/dsh-021-rc2-maintained-compatibility.md). This Git package is separate from upstream npm release recommendations.
+**Maintained RC5 package:** `0.2.0-alpha.5-kano.2` adds exact DSH `0.2.1-rc.5` compatibility and retains the previously declared hosts. See the [maintenance scope and validation boundary](agent-notes/dsh-021-rc5-maintained-compatibility.md). This Git package is separate from upstream npm release recommendations.
 
 **尚未发布的源码候选：** 本 checkout 准备 Codex Connect `0.2.0-alpha.5`，补齐精确 DSH `0.2.1-alpha.5` 和 `0.2.1-rc.1` 声明，保留包括 `0.2.1-alpha.4` 在内的原有八个宿主。宿主与浏览器诊断共用相同版本策略；详见[候选兼容性记录](agent-notes/dsh-021-alpha5-rc1-compatibility.md)及 [alpha.4 客户端状态修复](agent-notes/dsh-021-alpha4-compatibility.md)。候选验证不等于 npm 已发布或完整用户验收。新版本发布前，下方已发布组合表和安装命令仍对应不可变的 `0.2.0-alpha.4` 安装包。
 

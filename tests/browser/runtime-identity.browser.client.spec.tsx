@@ -57,19 +57,19 @@ describe('runtime identity in Chromium', () => {
     expect(fetchMock).toHaveBeenCalledOnce()
   })
 
-  it('accepts an exact RC2 Host receipt in Chromium', async () => {
+  it.each(['0.2.1-rc.2', '0.2.1-rc.5'])('accepts an exact %s Host receipt in Chromium', async version => {
     const report = runtimeReport(CODEX_CONNECT_VERSION)
-    report.currentDshVersion = '0.2.1-rc.2'
+    report.currentDshVersion = version
     for (const name of ['@deepseek-ai/dsh-llm', '@deepseek-ai/dsh-llm-pi-ai', '@deepseek-ai/dsh-compaction'] as const) {
-      report.compatibility.packages[name].installed = '0.2.1-rc.2'
+      report.compatibility.packages[name].installed = version
     }
     vi.stubGlobal('fetch', vi.fn(async () => json(report)))
     root!.render(createElement(OpenAICodexRuntimeIdentity, { t: translate(en) }))
     const region = page.getByRole('region', { name: en.runtimeHeading })
     await vi.waitFor(() => expect(region.element().textContent).toContain(en.runtimeVersionsMatch))
-    expect(region.element().querySelector('dl')?.textContent).toContain('0.2.1-rc.2')
+    expect(region.element().querySelector('dl')?.textContent).toContain(version)
     const receipt = JSON.parse(region.element().querySelector('pre')!.textContent!)
-    expect(receipt.host.currentDshVersion).toBe('0.2.1-rc.2')
+    expect(receipt.host.currentDshVersion).toBe(version)
   })
   it('clears an earlier match when a fresh recheck is refused and preserves this page version', async () => {
     let allowed = true
