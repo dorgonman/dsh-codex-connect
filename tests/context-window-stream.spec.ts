@@ -2,8 +2,10 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { AssistantMessageEventStream, Provider } from '@earendil-works/pi-ai'
-import { createOpenAICodexAdapter } from '../src/adapter.ts'
+import { defaultProviderAuthContext, InMemoryCredentialStore, type AssistantMessageEventStream, type Provider } from '@earendil-works/pi-ai'
+import { openaiCodexProvider } from '@earendil-works/pi-ai/providers/openai-codex'
+import { PiAiAdapter } from '@deepseek-ai/dsh-llm-pi-ai'
+import { createOpenAICodexAdapter, createOpenAICodexProfile, withOpenAICodexModels } from '../src/adapter.ts'
 import { OpenAICodexCredentialStore, OPENAI_CODEX_PROVIDER } from '../src/store.ts'
 
 const observed = vi.hoisted(() => [] as {
@@ -11,6 +13,10 @@ const observed = vi.hoisted(() => [] as {
   contextWindow: number
   maxTokens: number | undefined
   transport: string | undefined
+  model: string
+  api: string
+  baseUrl: string
+  headers: Readonly<Record<string, string | null>> | undefined
 }[])
 const streamGate = vi.hoisted(() => ({ pending: false, release: undefined as (() => void) | undefined }))
 
@@ -22,7 +28,8 @@ vi.mock('@earendil-works/pi-ai/providers/openai-codex', async importOriginal => 
       const provider: Provider = {
         ...actual.openaiCodexProvider(),
         streamSimple(model, _context, options) {
-          observed.push({ apiKey: options?.apiKey, contextWindow: model.contextWindow, maxTokens: options?.maxTokens, transport: options?.transport })
+          observed.push({ apiKey: options?.apiKey, contextWindow: model.contextWindow, maxTokens: options?.maxTokens, transport: options?.transport,
+            model: model.id, api: model.api, baseUrl: model.baseUrl, headers: options?.headers })
           if (streamGate.pending) {
             const waiting = new Promise<void>(resolve => { streamGate.release = resolve })
             return {
@@ -57,6 +64,7 @@ describe('context-window request snapshots', () => {
     credentials.captureActiveAccount = async () => credentials
     const overrides: Record<string, number> = {}
     const adapter = createOpenAICodexAdapter(credentials, () => undefined, undefined, undefined, undefined, undefined, () => overrides)
+    expect(await adapter.resolveModel('openai-codex', 'gpt-6.1-sol')).toMatchObject({ id: 'gpt-6.1-sol', context: { contextWindow: 500_000 } })
     const prepared = await adapter.prepareCall('openai-codex', 'gpt-6.1-sol')
     overrides['gpt-6.1-sol'] = 450_000
     const current = await adapter.prepareCall('openai-codex', 'gpt-6.1-sol')
@@ -67,6 +75,32 @@ describe('context-window request snapshots', () => {
       { contextWindow: 500_000, maxTokens: 1024, transport: 'sse' },
       { contextWindow: 450_000, maxTokens: 1024, transport: 'sse' },
     ])
+    expect(observed.map(({ model, api, baseUrl }) => ({ model, api, baseUrl }))).toEqual([
+      { model: 'gpt-6.1-sol', api: 'openai-codex-responses', baseUrl: 'https://chatgpt.com/backend-api' },
+      { model: 'gpt-6.1-sol', api: 'openai-codex-responses', baseUrl: 'https://chatgpt.com/backend-api' },
+    ])
+  })
+  it('hands the Host an ordinary Codex profile without rewriting its model, protocol, origin, or headers', async () => {
+    vi.stubGlobal('fetch', () => { throw new Error('Network is forbidden in this test') })
+    const profile = {
+      ...createOpenAICodexProfile(withOpenAICodexModels(openaiCodexProvider(), 'bundled-static')),
+      headers: { 'x-test-profile': 'retained' },
+    }
+    const adapter = new PiAiAdapter({
+      profiles: () => new Map([[OPENAI_CODEX_PROVIDER, profile]]),
+      resolveApiKey: async () => 'offline-test-access',
+      auth: { credentials: new InMemoryCredentialStore(), authContext: defaultProviderAuthContext() },
+    })
+    expect(await adapter.resolveModel(OPENAI_CODEX_PROVIDER, 'gpt-6.1-sol')).toMatchObject({ id: 'gpt-6.1-sol', context: { contextWindow: 500_000 } })
+    const call = await adapter.prepareCall(OPENAI_CODEX_PROVIDER, 'gpt-6.1-sol')
+    const events = []
+    for await (const event of call.stream({ provider: OPENAI_CODEX_PROVIDER, model: 'gpt-6.1-sol', messages: [], maxTokens: 16 })) events.push(event)
+    expect(events).toContainEqual({ type: 'finish', reason: { kind: 'error', failure: { code: 'PI_AI_ERROR', message: 'offline stream capture' } } })
+    expect(observed).toEqual([expect.objectContaining({
+      apiKey: 'offline-test-access', model: 'gpt-6.1-sol', api: 'openai-codex-responses',
+      baseUrl: 'https://chatgpt.com/backend-api', transport: 'sse', maxTokens: 16,
+      headers: expect.objectContaining({ 'x-test-profile': 'retained' }),
+    })])
   })
   it('streams a prepared call with its captured window while new calls use the updated window and unchanged output budget', async () => {
     vi.stubGlobal('fetch', () => { throw new Error('Network is forbidden in this test') })
@@ -87,7 +121,7 @@ describe('context-window request snapshots', () => {
         type: 'finish', reason: { kind: 'error', failure: { code: 'PI_AI_ERROR', message: 'offline stream capture' } },
       })
     }
-    expect(observed).toEqual([
+    expect(observed.map(({ apiKey, contextWindow, maxTokens, transport }) => ({ apiKey, contextWindow, maxTokens, transport }))).toEqual([
       { apiKey: 'offline-test-access', contextWindow: 350_000, maxTokens: 1024, transport: 'sse' },
       { apiKey: 'offline-test-access', contextWindow: 300_000, maxTokens: 1024, transport: 'sse' },
     ])

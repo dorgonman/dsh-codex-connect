@@ -5,9 +5,15 @@ import './release-metadata.test.mjs'
 
 const packageJson = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
 const failures = []
+const maintainedBuild = packageJson.version === '0.2.0-alpha.15-kano.1'
+  && packageJson.private === true
+  && packageJson.kanoBuild?.workItem === 'KOA-BUG-0194'
+  && packageJson.kanoBuild?.upstreamVersion === '0.2.0-alpha.15'
+  && packageJson.kanoBuild?.upstreamRevision === '16c7b3e99acd194c2ec0b5d5431930d6f7314b94'
+const releaseVersion = maintainedBuild ? packageJson.kanoBuild.upstreamVersion : packageJson.version
 
 if (packageJson.name !== 'dsh-codex-connect') failures.push('package name must be dsh-codex-connect')
-if (!isAlphaReleaseVersion(packageJson.version)) failures.push('package version must be a numeric Alpha release without build metadata')
+if (!isAlphaReleaseVersion(releaseVersion)) failures.push('package version must be a numeric Alpha release or the recorded private maintained build')
 if (packageJson.publishConfig?.tag !== 'alpha') failures.push('publishConfig.tag must be alpha')
 if (packageJson.displayName !== 'Codex Connect') failures.push('displayName mismatch')
 if (packageJson.description !== 'ChatGPT OAuth and Codex models for DeepSeek Harness.') failures.push('description mismatch')
@@ -51,13 +57,13 @@ if (!chineseReadme.includes('使用你当前 GPT 订阅计划提供的图片生�
 
 try {
   const compatibility = JSON.parse(await readFile(new URL('../verified-compatibility.json', import.meta.url), 'utf8'))
-  failures.push(...validateReadmeInstallation([readme, chineseReadme], compatibility, packageJson.version))
+  failures.push(...validateReadmeInstallation([readme, chineseReadme], compatibility, releaseVersion))
 } catch {
   failures.push('verified-compatibility.json must be readable JSON')
 }
 try {
   const manifest = JSON.parse(await readFile(new URL('../update-highlights.json', import.meta.url), 'utf8'))
-  failures.push(...validateUpdateHighlights(manifest, packageJson.version))
+  failures.push(...validateUpdateHighlights(manifest, releaseVersion))
 } catch {
   failures.push('update-highlights.json must be valid JSON')
 }

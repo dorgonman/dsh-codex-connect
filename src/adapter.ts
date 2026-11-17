@@ -166,6 +166,12 @@ export function createOpenAICodexProfile(
     ...(reasoningEffort === undefined ? {} : { reasoning: reasoningEffort }),
     configuredMaxTokens: new Map(),
     modelErrors: new Map<string, string>(),
+    // The maintained rc.3 Host extends the profile contract for custom routes.
+    // Codex keeps its native model, protocol, headers, and origin for every call.
+    requestModels: new Map<string, string>(),
+    requestProtocols: new Map<string, 'kinf-decision-v1'>(),
+    modelHeaders: new Map<string, Readonly<Record<string, string>>>(),
+    crossOriginModels: new Set<string>(),
     piProvider: requestProvider(effectiveProvider, fastMode, proxyManager, resolveProxyUrl, backendRequests, wrapProvider, preflight),
   }
   return profile

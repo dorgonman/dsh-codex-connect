@@ -2,7 +2,13 @@
   "name": "dsh-codex-connect",
   "displayName": "Codex Connect",
   "description": "ChatGPT OAuth and Codex models for DeepSeek Harness.",
-  "version": "0.2.0-alpha.15",
+  "version": "0.2.0-alpha.15-kano.1",
+  "private": true,
+  "kanoBuild": {
+    "workItem": "KOA-BUG-0194",
+    "upstreamVersion": "0.2.0-alpha.15",
+    "upstreamRevision": "16c7b3e99acd194c2ec0b5d5431930d6f7314b94"
+  },
   "author": "Frank Song",
   "contributors": [
     "Yan-Zero (original dsh-codex author)"
@@ -43,6 +49,7 @@
     "lint:source": "eslint src --max-warnings=0 && node scripts/check-source-lint.mjs",
     "build": "tsdown",
     "test": "vitest run",
+    "test:maintained-host": "vitest run --config vitest.maintained-host.config.ts",
     "test:browser": "vitest run --config vitest.browser.config.ts",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.client.json",
     "check:compatibility": "node scripts/check-compatibility.mjs",
