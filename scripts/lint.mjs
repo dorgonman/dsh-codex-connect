@@ -5,9 +5,9 @@ import './release-metadata.test.mjs'
 
 const packageJson = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
 const failures = []
-const maintainedBuild = packageJson.version === '0.2.0-alpha.15-kano.1'
+const maintainedBuild = packageJson.version === '0.2.0-alpha.15-kano.2'
   && packageJson.private === true
-  && packageJson.kanoBuild?.workItem === 'KOA-BUG-0194'
+  && packageJson.kanoBuild?.workItem === 'DSH-TSK-0007'
   && packageJson.kanoBuild?.upstreamVersion === '0.2.0-alpha.15'
   && packageJson.kanoBuild?.upstreamRevision === '16c7b3e99acd194c2ec0b5d5431930d6f7314b94'
 const releaseVersion = maintainedBuild ? packageJson.kanoBuild.upstreamVersion : packageJson.version

@@ -80,7 +80,11 @@ describe('context-window request snapshots', () => {
       { model: 'gpt-6.1-sol', api: 'openai-codex-responses', baseUrl: 'https://chatgpt.com/backend-api' },
     ])
   })
-  it('hands the Host an ordinary Codex profile without rewriting its model, protocol, origin, or headers', async () => {
+  it.each([
+    ['gpt-6.1-sol', 500_000],
+    ['gpt-6.2-sol', 500_000],
+    ['gpt-6.2-astra', 272_000],
+  ])('hands the Host %s without rewriting its model, protocol, origin, or headers', async (model, contextWindow) => {
     vi.stubGlobal('fetch', () => { throw new Error('Network is forbidden in this test') })
     const profile = {
       ...createOpenAICodexProfile(withOpenAICodexModels(openaiCodexProvider(), 'bundled-static')),
@@ -91,13 +95,13 @@ describe('context-window request snapshots', () => {
       resolveApiKey: async () => 'offline-test-access',
       auth: { credentials: new InMemoryCredentialStore(), authContext: defaultProviderAuthContext() },
     })
-    expect(await adapter.resolveModel(OPENAI_CODEX_PROVIDER, 'gpt-6.1-sol')).toMatchObject({ id: 'gpt-6.1-sol', context: { contextWindow: 500_000 } })
-    const call = await adapter.prepareCall(OPENAI_CODEX_PROVIDER, 'gpt-6.1-sol')
+    expect(await adapter.resolveModel(OPENAI_CODEX_PROVIDER, model)).toMatchObject({ id: model, context: { contextWindow } })
+    const call = await adapter.prepareCall(OPENAI_CODEX_PROVIDER, model)
     const events = []
-    for await (const event of call.stream({ provider: OPENAI_CODEX_PROVIDER, model: 'gpt-6.1-sol', messages: [], maxTokens: 16 })) events.push(event)
+    for await (const event of call.stream({ provider: OPENAI_CODEX_PROVIDER, model, messages: [], maxTokens: 16 })) events.push(event)
     expect(events).toContainEqual({ type: 'finish', reason: { kind: 'error', failure: { code: 'PI_AI_ERROR', message: 'offline stream capture' } } })
     expect(observed).toEqual([expect.objectContaining({
-      apiKey: 'offline-test-access', model: 'gpt-6.1-sol', api: 'openai-codex-responses',
+      apiKey: 'offline-test-access', model, api: 'openai-codex-responses',
       baseUrl: 'https://chatgpt.com/backend-api', transport: 'sse', maxTokens: 16,
       headers: expect.objectContaining({ 'x-test-profile': 'retained' }),
     })])

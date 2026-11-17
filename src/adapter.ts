@@ -170,7 +170,9 @@ export function createOpenAICodexProfile(
     // Codex keeps its native model, protocol, headers, and origin for every call.
     requestModels: new Map<string, string>(),
     requestProtocols: new Map<string, 'kinf-decision-v1'>(),
+    nativeTools: new Map<string, boolean>(),
     modelHeaders: new Map<string, Readonly<Record<string, string>>>(),
+    modelStreamIdleTimeouts: new Map<string, number>(),
     crossOriginModels: new Set<string>(),
     piProvider: requestProvider(effectiveProvider, fastMode, proxyManager, resolveProxyUrl, backendRequests, wrapProvider, preflight),
   }

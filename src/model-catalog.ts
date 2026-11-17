@@ -61,10 +61,10 @@ export function withOpenAICodexModels(
 ): Provider<'openai-codex-responses'> {
   const baseline = withOpenAICodexAstra(provider)
   const models = [...baseline.getModels()]
+  // Ultra is Codex client orchestration, not a pi-ai thinking level.
+  const thinkingLevelMap = { off: null, minimal: null, xhigh: 'xhigh', max: 'max' } as const
   for (const [id, name] of [['gpt-6.1-sol', 'GPT-6.1-Sol'], ['gpt-6-sol', 'GPT-6-Sol'], ['gpt-6-luna', 'GPT-6-Luna'], ['gpt-6.1-terra', 'GPT-6.1 Terra']] as const) {
     const index = models.findIndex(model => model.id === id)
-    // Ultra is Codex client orchestration, not a pi-ai thinking level.
-    const thinkingLevelMap = { off: null, minimal: null, xhigh: 'xhigh', max: 'max' } as const
     if (index === -1) models.push({ ...OPENAI_CODEX_ASTRA_MODEL, id, name, thinkingLevelMap,
       ...(id === 'gpt-6.1-sol' ? { contextWindow: SOL61_CONTEXT_WINDOW } : {}),
       // The Terra-specific model-contract source pins this Codex default.
@@ -78,6 +78,14 @@ export function withOpenAICodexModels(
         thinkingLevelMap: { ...model.thinkingLevelMap, ...thinkingLevelMap },
       }
     }
+  }
+  // Match the official Codex catalog linked by openAICodexContextLimitSource.
+  for (const [id, name, contextWindow] of [
+    ['gpt-6.2-sol', 'GPT-6.2-Sol', 500_000],
+    ['gpt-6.2-astra', 'GPT-6.2-Astra', 272_000],
+  ] as const) {
+    if (models.some(model => model.id === id)) continue
+    models.push({ ...OPENAI_CODEX_ASTRA_MODEL, id, name, contextWindow, thinkingLevelMap })
   }
   return { ...baseline, getModels: () => models }
 }

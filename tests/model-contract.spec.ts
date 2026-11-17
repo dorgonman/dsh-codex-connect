@@ -15,6 +15,8 @@ describe('model-specific configuration ceilings', () => {
     }
   })
   it.each([
+    ['gpt-6.2-sol', 500_000, 872_000],
+    ['gpt-6.2-astra', 272_000, 872_000],
     ['gpt-6-astra', 272_000, 872_000],
     ['gpt-6.1-sol', 500_000, 872_000],
     ['gpt-6.1-terra', 500_000, 872_000],
@@ -40,6 +42,26 @@ describe('model-specific configuration ceilings', () => {
       expect(() => assertOpenAICodexContextWindowOverrides({ [id]: budget }, catalog)).toThrow('integer from 1 to')
     }
     expect(() => assertOpenAICodexContextWindowOverrides({ [id]: null }, catalog)).not.toThrow()
+  })
+
+  it.each([
+    ['gpt-6.2-sol', 500_000],
+    ['gpt-6.2-astra', 272_000],
+  ])('adds %s to a legacy provider and keeps native metadata when present', (id, contextWindow) => {
+    const provider = openaiCodexProvider()
+    const baseline = provider.getModels().filter(model => model.id !== id)
+    const fallback = withOpenAICodexModels({ ...provider, getModels: () => baseline })
+      .getModels().find(model => model.id === id)!
+    expect(fallback).toMatchObject({
+      id, contextWindow, maxTokens: 128_000, input: ['text', 'image'], reasoning: true,
+      provider: 'openai-codex', api: 'openai-codex-responses',
+      thinkingLevelMap: { off: null, minimal: null, xhigh: 'xhigh', max: 'max' },
+    })
+    const native = { ...fallback, name: 'Native metadata', contextWindow: 420_000 }
+    const models = withOpenAICodexModels({ ...provider, getModels: () => [native, ...baseline] }).getModels()
+    expect(models.filter(model => model.id === id)).toEqual([native])
+    expect(models.find(model => model.id === id)).toBe(native)
+    expect(openAICodexContextLimitSource(id)).toBe('https://github.com/openai/codex/blob/6c0cee502d215e5df2dd9a303cf2e252229c9e12/codex-rs/models-manager/models.json')
   })
 
   it('keeps the calibrated fallback separate from explicit or native budgets', () => {

@@ -2,10 +2,10 @@
   "name": "dsh-codex-connect",
   "displayName": "Codex Connect",
   "description": "ChatGPT OAuth and Codex models for DeepSeek Harness.",
-  "version": "0.2.0-alpha.15-kano.1",
+  "version": "0.2.0-alpha.15-kano.2",
   "private": true,
   "kanoBuild": {
-    "workItem": "KOA-BUG-0194",
+    "workItem": "DSH-TSK-0007",
     "upstreamVersion": "0.2.0-alpha.15",
     "upstreamRevision": "16c7b3e99acd194c2ec0b5d5431930d6f7314b94"
   },
